@@ -74,9 +74,71 @@ docker run --name <container-name> <image-name>
 只要你的依赖项不变（即Dockerfile和requirements.txt不变），你便随时可以使用`docker start <container-name>`来运行你的代码。
 而若是你的依赖项改变了，那你便不得不重新运行`docker build`指令了。
 
+## 前后端项目——Docker Compose
 
+我现有项目结构如下：
 
+```
+my-project/
+├── frontend/
+│   ├── Dockerfile
+│   └── app/
+├── backend/
+│   ├── Dockerfile
+│   └── src/
+└── docker-compose.yml
+```
 
+其中，前、后端均已经设有独立的Dockerfile。
+若是想前后端联调/作为整个项目一起运行。则需要用到docker compose。
+首先我们需要创建一个`docker-compose.yml`文件，示例如下：
+
+```
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - app-net
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-net
+
+networks:
+  app-net:
+```
+
+更多详细介绍见[compose-file](https://docs.docker.com/reference/compose-file/)。
+
+使用流程如下：
+第一次启动：
+```
+docker-compose up --build
+```
+以后只要你不改依赖：
+```
+docker-compose up
+```
+停止容器：
+```
+docker-compose down
+```
+
+这相当于同时运行前后端两个容器，并且让这两个容器都处于同一个网络中，可以互相通信。
+
+至此，你便成功用docker运行了你的项目。
 
 
 
