@@ -58,7 +58,7 @@ RUN pip install -r requirements.txt
 CMD ["python", "app/main.py"]
 ```
 
-For more details, refer to the [[Dockerfile reference](https://docs.docker.com/reference/dockerfile/)](https://docs.docker.com/reference/dockerfile/).
+For more details, refer to the [Dockerfile reference](https://docs.docker.com/reference/dockerfile/).
 
 Now use the following command to build the image:
 
@@ -135,7 +135,7 @@ networks:
   app-net:
 ```
 
-For more details, check out the [[Compose file reference](https://docs.docker.com/reference/compose-file/)](https://docs.docker.com/reference/compose-file/).
+For more details, check out the [Compose file reference](https://docs.docker.com/reference/compose-file/).
 
 ---
 
