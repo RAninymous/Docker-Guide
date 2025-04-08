@@ -1,34 +1,40 @@
-# Docker-Guide
+# Docker Guide
 
-为什么要使用docker？——为了团队合作。那如何使用docker？
+## 为什么在团队合作中要使用 Docker？
 
-## 个人项目
-
-### 原理讲解
-
-我们在个人开发时，常见的场景是如下图这样的：
+在本地开发过程中，我们常见的开发流程是这样的：
 
 ![image](https://github.com/user-attachments/assets/2b3c5b44-d711-4968-966f-0958cd960b7c)
 
-我们在**本地环境**修改**代码**，通过**运行**出来的**进程**来查看成果/检查问题。
+我们在**本地环境**修改**代码**，通过运行产生的**进程**来查看效果或调试问题。
 
-而这有什么问题？当你在团队合作的过程中，不同人电脑上的本地环境是不同的！
+然而在团队协作中，不同成员的电脑操作系统、Python 版本、依赖库等本地环境常常不一致，这很容易导致：
 
-而这就需要引入docker了。docker的运行场景是类似下图的（注意这里的code是相同的）：
+> “我这边能跑，你那边报错了？”
+
+为了避免这种环境不一致的问题，我们引入 Docker —— 一个可以**封装运行环境**的工具。
+
+通过 Docker，我们可以像下图一样，在每个人的电脑上运行一模一样的环境和代码：
 
 ![image](https://github.com/user-attachments/assets/7acffeab-04d4-4fa3-bf6a-80f5a98231a6)
 
-你只需要添加一个**Dockerfile**，告诉docker你的程序所运行的环境需要什么依赖项，docker就会自动为你生成你的程序运行所需的环境（即**镜像**）。（这里的环境是比虚拟机要更加轻量化的存在。）
+你只需要编写一个简单的 **Dockerfile** 来声明程序运行所需的环境和依赖，Docker 就会为你构建出一个轻量级的、可重复使用的运行环境（即**镜像**）。
 
-至此，你便可以无所顾忌地跟他人分享/合作编辑你的代码了，并且避免“在我的电脑上能跑啊？”的问题。
+至此，你就可以放心地与他人共享、协同开发代码，无需再担心环境配置问题。
+
+---
+
+## 一、个人项目中使用 Docker
+
+### 原理简述
+
+> 将“本地运行环境”换成“容器运行环境”，通过 Docker 统一开发、测试、运行的所有流程。
 
 ### 实践操作
 
-在我们现有项目的基础上，我们首先需要创建一个Dockerfile。（如果你不需要担任项目的docker初始化，你便不需要进行这项操作。）
+假设你的项目结构如下：
 
-假设我们现在的项目结构是这样的：
-
-```css
+```bash
 my-app/
 ├── app/
 │   └── main.py
@@ -36,49 +42,72 @@ my-app/
 └── Dockerfile
 ```
 
-那么一个Dockerfile的样例便是如此：
+接下来我们编写一个 `Dockerfile`：
 
 ```Dockerfile
 # 使用官方 Python 镜像作为基础
 FROM python:3.11
 
-# 设置工作目录
+# 设置容器内的工作目录
 WORKDIR /app
 
-# 拷贝项目文件到容器内
+# 将本地项目文件复制进容器
 COPY . .
 
 # 安装依赖
 RUN pip install -r requirements.txt
 
-# 启动命令
+# 容器启动时执行的命令
 CMD ["python", "app/main.py"]
 ```
 
-更详细的Dockerfile创建教程，详见[docker官方文档](https://docs.docker.com/reference/dockerfile/)。
+详细语法参考：[Dockerfile 官方文档](https://docs.docker.com/reference/dockerfile/)
 
-然后使用以下指令来创建镜像：
-```
+---
+
+### 构建并运行
+
+#### 第一步：构建镜像（build image）
+
+```powershell
 docker build -t <image-name> .
 ```
 
-创建之后使用以下指令来创建容器：
-```
+#### 第二步：运行容器（run container）
+
+```powershell
 docker run --name <container-name> <image-name>
 ```
 
-之后你便可以使用`docker start <container-name>`来随时启动这个容器了。这就相当于你在本地运行代码。让我们回顾一下这张图：
+容器运行后，你的程序就会开始执行。
 
-![image](https://github.com/user-attachments/assets/7acffeab-04d4-4fa3-bf6a-80f5a98231a6)
+---
 
-只要你的依赖项不变（即Dockerfile和requirements.txt不变），你便随时可以使用`docker start <container-name>`来运行你的代码。
-而若是你的依赖项改变了，那你便不得不重新运行`docker build`指令了。
+### 重复运行 / 更新
 
-## 前后端项目——Docker Compose
+- 以后可以使用以下命令来重新启动容器：
 
-我现有项目结构如下：
-
+```powershell
+docker start <container-name>
 ```
+
+这相当于重新运行你的应用。
+
+- 只有当你**更改了依赖**（如 Dockerfile或requirements.txt 变了）时，才需要重新构建镜像：
+
+```powershell
+docker build -t <image-name> .
+```
+
+---
+
+## 二、前后端项目使用 Docker Compose
+
+当你拥有前后端两个服务时，如果希望同时管理它们的运行，可以使用 `docker-compose`。
+
+### 示例项目结构
+
+```bash
 my-project/
 ├── frontend/
 │   ├── Dockerfile
@@ -89,11 +118,9 @@ my-project/
 └── docker-compose.yml
 ```
 
-其中，前、后端均已经设有独立的Dockerfile。
-若是想前后端联调/作为整个项目一起运行。则需要用到docker compose。
-首先我们需要创建一个`docker-compose.yml`文件，示例如下：
+### 示例 docker-compose.yml 配置
 
-```
+```yaml
 version: '3'
 services:
   frontend:
@@ -102,7 +129,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app  # 映射本地目录以支持热更新
     networks:
       - app-net
 
@@ -120,31 +147,62 @@ networks:
   app-net:
 ```
 
-更多详细介绍见[compose-file](https://docs.docker.com/reference/compose-file/)。
+更多语法见：[Compose File 官方文档](https://docs.docker.com/reference/compose-file/)
 
-使用流程如下：
-第一次启动：
-```
+---
+
+### 使用流程
+
+#### 首次构建并启动服务
+
+```powershell
 docker-compose up --build
 ```
-以后只要你不改依赖：
-```
+
+这一步会读取每个子目录下的 `Dockerfile`，构建镜像并启动容器。
+
+#### 后续启动（无依赖变更时）
+
+```powershell
 docker-compose up
 ```
-停止容器：
-```
+
+#### 停止所有容器
+
+```powershell
 docker-compose down
 ```
 
-这相当于同时运行前后端两个容器，并且让这两个容器都处于同一个网络中，可以互相通信。
+---
 
-至此，你便成功用docker运行了你的项目。
+### 前后端如何通信？
 
+由于前后端服务被放置在同一个自定义网络中（`app-net`），它们之间可以通过服务名互相访问。例如：
 
+- 前端请求后端接口时，可以使用地址 `http://backend:8000`，而不是 `localhost`。
+- 这是因为 Docker 内部的 DNS 会将 `backend` 解析为对应容器的 IP 地址。
 
+---
 
+## 小结
 
+通过本文你学习了：
 
+- 如何为个人项目编写 Dockerfile；
+- 如何构建和运行镜像与容器；
+- 如何使用 Docker Compose 同时管理前后端服务；
+- 如何在团队中统一开发环境，提高协作效率。
+
+如果你想进一步学习：
+
+- 可以了解 `docker volume` 持久化数据；
+- 学习 `docker exec` 进入容器调试；
+- 探索如何将镜像上传到 DockerHub；
+- 或者迈向更高级的容器编排工具：Kubernetes
+
+---
+
+如果你觉得这份指南对你有帮助，欢迎分享给你的队友一起用 🫶！
 
 
 
