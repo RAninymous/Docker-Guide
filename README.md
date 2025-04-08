@@ -1,5 +1,7 @@
 # Docker Guide
 
+For English version, click [here](https://github.com/RAninymous/Docker-Guide/blob/main/Docker%20Guide.md).
+
 ## 为什么在团队合作中要使用 Docker？
 
 在本地开发过程中，我们常见的开发流程是这样的：
